@@ -11,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAssignments } from '../../hooks/useAssignments';
+import { useAssignments, useAssignment } from '../../hooks/useAssignments';
 import { useActiveTheme } from '../../stores/themeStore';
 import { CourseBadge } from '../../components/common/CourseBadge';
 import { StateView } from '../../components/common/StateView';
@@ -22,6 +22,7 @@ import {
   getRelativeDueLabel,
   checkIsOverdue,
 } from '../../utils/dateUtils';
+import { confirmAction } from '../../utils/confirmDialog';
 import { Spacing, Typography, BorderRadius, Colors } from '../../constants/theme';
 
 export default function AssignmentDetailScreen() {
@@ -30,16 +31,14 @@ export default function AssignmentDetailScreen() {
   const { theme } = useActiveTheme();
 
   const {
-    allAssignments,
+    data: assignment,
     isLoading,
     isError,
     error,
     refetch,
-    toggleAssignment,
-    deleteAssignment,
-  } = useAssignments();
+  } = useAssignment(id);
 
-  const assignment = allAssignments.find((a) => a.id === id);
+  const { toggleAssignment, deleteAssignment } = useAssignments();
 
   const handleToggle = async () => {
     if (!assignment) return;
@@ -52,25 +51,21 @@ export default function AssignmentDetailScreen() {
 
   const handleDelete = () => {
     if (!assignment) return;
-    Alert.alert(
-      'Xóa bài tập',
-      `Bạn có chắc chắn muốn xóa bài tập "${assignment.title}"? Thao tác này không thể hoàn tác.`,
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteAssignment(assignment.id);
-              router.back();
-            } catch (err: any) {
-              Alert.alert('Lỗi', err.message || 'Không thể xóa bài tập.');
-            }
-          },
-        },
-      ]
-    );
+    confirmAction({
+      title: 'Xóa bài tập',
+      message: `Bạn có chắc chắn muốn xóa bài tập "${assignment.title}"? Thao tác này không thể hoàn tác.`,
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteAssignment(assignment.id);
+          router.back();
+        } catch (err: any) {
+          Alert.alert('Lỗi', err.message || 'Không thể xóa bài tập.');
+        }
+      },
+    });
   };
 
   const isCompleted = assignment?.status === 'completed';
@@ -124,7 +119,7 @@ export default function AssignmentDetailScreen() {
         isLoading={isLoading && !assignment}
         isError={isError && !assignment}
         error={error as Error}
-        isEmpty={!isLoading && !assignment}
+        isEmpty={!isLoading && !isError && !assignment}
         emptyTitle="Không tìm thấy bài tập"
         emptyMessage="Bài tập này có thể đã bị xóa hoặc không thuộc quyền truy cập của bạn."
         emptyActionLabel="Trở về danh sách"
@@ -241,6 +236,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
+    width: '100%',
+    maxWidth: 640,
+    alignSelf: 'center',
   },
   backButton: {
     width: 44,
@@ -268,6 +266,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: Spacing.xl,
     paddingBottom: 40,
+    width: '100%',
+    maxWidth: 640,
+    alignSelf: 'center',
   },
   courseBadgeRow: {
     marginBottom: Spacing.md,

@@ -1,23 +1,27 @@
 # Dependencies
 node_modules/
-package-lock.json
 
-# Environment variables
+# Lockfiles: keep these in Git for reproducible installs
+# package-lock.json
+
+# Environment variables and secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # Expo
 .expo/
 web-build/
 dist/
 
-# SQLite databases & temp files
+# SQLite databases and runtime files
+backend/data/
 *.sqlite
-*.sqlite-journal
 *.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
 *.db
-backend/data/*.sqlite
 
 # Logs
 npm-debug.log*

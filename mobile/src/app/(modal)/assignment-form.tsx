@@ -19,19 +19,30 @@ import { useAssignments } from '../../hooks/useAssignments';
 import { useActiveTheme } from '../../stores/themeStore';
 import { AppInput } from '../../components/common/AppInput';
 import { AppButton } from '../../components/common/AppButton';
+import { StateView } from '../../components/common/StateView';
 import { resolveCourseColour, Spacing, Typography, BorderRadius, Colors } from '../../constants/theme';
 import { formatDateTime } from '../../utils/dateUtils';
+import { Assignment, CreateAssignmentInput, UpdateAssignmentInput } from '../../types/assignment';
+import { Course } from '../../types/course';
 
-export default function AssignmentFormModal() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+interface AssignmentFormContentProps {
+  id?: string;
+  existingAssignment: Assignment | null;
+  courses: Course[];
+  createAssignment: (input: CreateAssignmentInput) => Promise<any>;
+  updateAssignment: (args: { id: string; input: UpdateAssignmentInput }) => Promise<any>;
+}
+
+function AssignmentFormContent({
+  id,
+  existingAssignment,
+  courses,
+  createAssignment,
+  updateAssignment,
+}: AssignmentFormContentProps) {
   const router = useRouter();
   const { theme } = useActiveTheme();
-
-  const { courses } = useCourses();
-  const { allAssignments, createAssignment, updateAssignment } = useAssignments();
-
-  const isEditing = Boolean(id);
-  const existingAssignment = isEditing ? allAssignments.find((a) => a.id === id) : null;
+  const isEditing = Boolean(id && existingAssignment);
 
   // Form states initialized directly from existing assignment or defaults
   const [courseId, setCourseId] = useState(() => existingAssignment?.courseId || courses[0]?.id || '');
@@ -165,6 +176,234 @@ export default function AssignmentFormModal() {
   };
 
   return (
+    <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      {/* Course Picker */}
+      <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
+        Chọn học phần <Text style={{ color: theme.error }}>*</Text>
+      </Text>
+
+      {courses.length === 0 ? (
+        <View style={[styles.noCourseWarning, { backgroundColor: theme.warningBg, borderColor: theme.warning }]}>
+          <Ionicons name="alert-circle" size={18} color={theme.warning} style={{ marginRight: 6 }} />
+          <Text style={[styles.noCourseText, { color: theme.warning }]}>
+            Bạn chưa có học phần nào. Hãy tạo học phần trước!
+          </Text>
+        </View>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.courseChipsScroll}>
+          {courses.map((c) => {
+            const isSelected = (courseId || courses[0]?.id) === c.id;
+            const palette = resolveCourseColour(c.colour, theme);
+
+            return (
+              <TouchableOpacity
+                key={c.id}
+                style={[
+                  styles.courseChip,
+                  {
+                    backgroundColor: isSelected ? palette.text : palette.bg,
+                    borderColor: isSelected ? palette.text : theme.border,
+                  },
+                ]}
+                onPress={() => setCourseId(c.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Chọn học phần ${c.code}`}
+                accessibilityState={{ selected: isSelected }}
+              >
+                <Text style={[styles.courseChipText, { color: isSelected ? theme.textInverse : palette.text }]}>
+                  {c.code}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {/* Title Input */}
+      <AppInput
+        label="Tiêu đề bài tập *"
+        placeholder="Ví dụ: Báo cáo cuối kỳ, Bài tập lớn 2..."
+        value={title}
+        onChangeText={(t) => {
+          setTitle(t);
+          if (validationErrors.title) setValidationErrors((prev) => ({ ...prev, title: '' }));
+        }}
+        error={validationErrors.title}
+      />
+
+      {/* Due Date & Time */}
+      <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
+        Hạn nộp (Thời gian hoàn thành)
+      </Text>
+
+      <View style={[styles.duePreviewBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Ionicons name="calendar-outline" size={20} color={theme.primary} style={{ marginRight: Spacing.sm }} />
+        <Text style={[styles.duePreviewText, { color: theme.textPrimary }]}>
+          {formatDateTime(dueAt)}
+        </Text>
+      </View>
+
+      {/* Quick Deadline Presets */}
+      <Text style={[styles.presetLabel, { color: theme.textTertiary }]}>Chọn nhanh thời hạn:</Text>
+      <View style={styles.presetsRow}>
+        <TouchableOpacity
+          style={[styles.presetChip, { backgroundColor: theme.surfaceSubtle }]}
+          onPress={() => handleApplyPreset('today2359')}
+          accessibilityRole="button"
+          accessibilityLabel="Đặt hạn hôm nay 23:59"
+        >
+          <Text style={[styles.presetChipText, { color: theme.textPrimary }]}>Hôm nay 23:59</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.presetChip, { backgroundColor: theme.surfaceSubtle }]}
+          onPress={() => handleApplyPreset('tomorrow17')}
+          accessibilityRole="button"
+          accessibilityLabel="Đặt hạn ngày mai 17:00"
+        >
+          <Text style={[styles.presetChipText, { color: theme.textPrimary }]}>Ngày mai 17:00</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.presetChip, { backgroundColor: theme.surfaceSubtle }]}
+          onPress={() => handleApplyPreset('in3days')}
+          accessibilityRole="button"
+          accessibilityLabel="Đặt hạn sau 3 ngày"
+        >
+          <Text style={[styles.presetChipText, { color: theme.textPrimary }]}>Sau 3 ngày</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.presetChip, { backgroundColor: theme.surfaceSubtle }]}
+          onPress={() => handleApplyPreset('nextweek')}
+          accessibilityRole="button"
+          accessibilityLabel="Đặt hạn tuần sau"
+        >
+          <Text style={[styles.presetChipText, { color: theme.textPrimary }]}>Tuần sau</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Status Option */}
+      <Text style={[styles.sectionLabel, { color: theme.textSecondary, marginTop: Spacing.md }]}>
+        Trạng thái ban đầu
+      </Text>
+      <View style={[styles.statusToggleRow, { backgroundColor: theme.surfaceSubtle }]}>
+        <TouchableOpacity
+          style={[
+            styles.statusToggleBtn,
+            status === 'pending' && [styles.statusToggleBtnActive, { backgroundColor: theme.surface }],
+          ]}
+          onPress={() => setStatus('pending')}
+          accessibilityRole="button"
+          accessibilityLabel="Trạng thái Chưa hoàn thành"
+          accessibilityState={{ selected: status === 'pending' }}
+        >
+          <Text style={[styles.statusToggleText, { color: status === 'pending' ? theme.warning : theme.textSecondary }]}>
+            Chưa hoàn thành
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.statusToggleBtn,
+            status === 'completed' && [styles.statusToggleBtnActive, { backgroundColor: theme.surface }],
+          ]}
+          onPress={() => setStatus('completed')}
+          accessibilityRole="button"
+          accessibilityLabel="Trạng thái Đã hoàn thành"
+          accessibilityState={{ selected: status === 'completed' }}
+        >
+          <Text style={[styles.statusToggleText, { color: status === 'completed' ? theme.success : theme.textSecondary }]}>
+            Đã hoàn thành
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Notes Input */}
+      <AppInput
+        label="Ghi chú thêm (tùy chọn)"
+        placeholder="Nhập ghi chú, yêu cầu đề bài hoặc tài liệu tham khảo..."
+        value={notes}
+        onChangeText={setNotes}
+        multiline
+        numberOfLines={4}
+        style={{ minHeight: 90, textAlignVertical: 'top' }}
+      />
+
+      {/* Photo Attachment (Handwritten Notes / Whiteboard) */}
+      <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
+        Ảnh ghi chú viết tay / Bảng trắng (tùy chọn)
+      </Text>
+
+      {photoUri ? (
+        <View style={styles.photoPreviewWrapper}>
+          <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+          <TouchableOpacity
+            style={[styles.removePhotoBtn, { backgroundColor: theme.error }]}
+            onPress={() => setPhotoUri(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Xóa ảnh đính kèm"
+          >
+            <Ionicons name="trash" size={16} color={theme.textInverse} />
+            <Text style={[styles.removePhotoText, { color: theme.textInverse }]}>Xóa ảnh</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={[styles.attachPhotoButton, { backgroundColor: theme.surface, borderColor: theme.border }]}
+          onPress={handlePickImage}
+          accessibilityRole="button"
+          accessibilityLabel="Chụp hoặc chọn ảnh ghi chú bảng trắng"
+        >
+          <Ionicons name="camera-outline" size={24} color={theme.primary} style={{ marginRight: Spacing.sm }} />
+          <Text style={[styles.attachPhotoText, { color: theme.primary }]}>
+            Chụp ảnh ghi chú hoặc chọn từ thư viện
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Submit Button */}
+      <AppButton
+        title={isEditing ? 'Cập nhật bài tập' : 'Tạo bài tập'}
+        onPress={handleSubmit}
+        isLoading={isSubmitting}
+        style={styles.submitBtn}
+      />
+    </ScrollView>
+  );
+}
+
+export default function AssignmentFormModal() {
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const router = useRouter();
+  const { theme } = useActiveTheme();
+
+  const { courses, isLoading: isLoadingCourses } = useCourses();
+  const {
+    allAssignments,
+    isLoading: isLoadingAssignments,
+    isError: isErrorAssignments,
+    error: assignmentsError,
+    refetch: refetchAssignments,
+    createAssignment,
+    updateAssignment,
+  } = useAssignments();
+
+  const isEditing = Boolean(id);
+  const existingAssignment = isEditing ? allAssignments.find((a) => a.id === id) : null;
+
+  // Loading state: when editing and data is in-flight, or when courses are loading
+  const isLoading =
+    (isEditing && isLoadingAssignments && !existingAssignment) ||
+    (isLoadingCourses && courses.length === 0);
+
+  // Error state: when editing, query failed, and no cached assignment is available
+  const isError = isEditing && isErrorAssignments && !existingAssignment;
+
+  // Not found state: query finished successfully, but the requested assignment ID does not exist
+  const isNotFound = isEditing && !isLoadingAssignments && !isErrorAssignments && !existingAssignment;
+
+  return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -184,198 +423,27 @@ export default function AssignmentFormModal() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Course Picker */}
-        <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
-          Chọn học phần <Text style={{ color: theme.error }}>*</Text>
-        </Text>
-
-        {courses.length === 0 ? (
-          <View style={[styles.noCourseWarning, { backgroundColor: theme.warningBg, borderColor: theme.warning }]}>
-            <Ionicons name="alert-circle" size={18} color={theme.warning} style={{ marginRight: 6 }} />
-            <Text style={[styles.noCourseText, { color: theme.warning }]}>
-              Bạn chưa có học phần nào. Hãy tạo học phần trước!
-            </Text>
-          </View>
-        ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.courseChipsScroll}>
-            {courses.map((c) => {
-              const isSelected = (courseId || courses[0]?.id) === c.id;
-              const palette = resolveCourseColour(c.colour, theme);
-
-              return (
-                <TouchableOpacity
-                  key={c.id}
-                  style={[
-                    styles.courseChip,
-                    {
-                      backgroundColor: isSelected ? palette.text : palette.bg,
-                      borderColor: isSelected ? palette.text : theme.border,
-                    },
-                  ]}
-                  onPress={() => setCourseId(c.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Chọn học phần ${c.code}`}
-                  accessibilityState={{ selected: isSelected }}
-                >
-                  <Text style={[styles.courseChipText, { color: isSelected ? theme.textInverse : palette.text }]}>
-                    {c.code}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
-
-        {/* Title Input */}
-        <AppInput
-          label="Tiêu đề bài tập *"
-          placeholder="Ví dụ: Báo cáo cuối kỳ, Bài tập lớn 2..."
-          value={title}
-          onChangeText={(t) => {
-            setTitle(t);
-            if (validationErrors.title) setValidationErrors((prev) => ({ ...prev, title: '' }));
-          }}
-          error={validationErrors.title}
+      <StateView
+        isLoading={isLoading}
+        loadingMessage="Đang tải dữ liệu bài tập..."
+        isError={isError}
+        error={assignmentsError as Error}
+        onRetry={() => refetchAssignments()}
+        isEmpty={isNotFound}
+        emptyTitle="Không tìm thấy bài tập"
+        emptyMessage="Bài tập này có thể đã bị xóa hoặc không thuộc quyền truy cập của bạn."
+        emptyActionLabel="Quay lại"
+        onEmptyAction={() => router.back()}
+      >
+        <AssignmentFormContent
+          key={id || 'new'}
+          id={id}
+          existingAssignment={existingAssignment || null}
+          courses={courses}
+          createAssignment={createAssignment}
+          updateAssignment={updateAssignment}
         />
-
-        {/* Due Date & Time */}
-        <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
-          Hạn nộp (Thời gian hoàn thành)
-        </Text>
-
-        <View style={[styles.duePreviewBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <Ionicons name="calendar-outline" size={20} color={theme.primary} style={{ marginRight: Spacing.sm }} />
-          <Text style={[styles.duePreviewText, { color: theme.textPrimary }]}>
-            {formatDateTime(dueAt)}
-          </Text>
-        </View>
-
-        {/* Quick Deadline Presets */}
-        <Text style={[styles.presetLabel, { color: theme.textTertiary }]}>Chọn nhanh thời hạn:</Text>
-        <View style={styles.presetsRow}>
-          <TouchableOpacity
-            style={[styles.presetChip, { backgroundColor: theme.surfaceSubtle }]}
-            onPress={() => handleApplyPreset('today2359')}
-            accessibilityRole="button"
-            accessibilityLabel="Đặt hạn hôm nay 23:59"
-          >
-            <Text style={[styles.presetChipText, { color: theme.textPrimary }]}>Hôm nay 23:59</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.presetChip, { backgroundColor: theme.surfaceSubtle }]}
-            onPress={() => handleApplyPreset('tomorrow17')}
-            accessibilityRole="button"
-            accessibilityLabel="Đặt hạn ngày mai 17:00"
-          >
-            <Text style={[styles.presetChipText, { color: theme.textPrimary }]}>Ngày mai 17:00</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.presetChip, { backgroundColor: theme.surfaceSubtle }]}
-            onPress={() => handleApplyPreset('in3days')}
-            accessibilityRole="button"
-            accessibilityLabel="Đặt hạn sau 3 ngày"
-          >
-            <Text style={[styles.presetChipText, { color: theme.textPrimary }]}>Sau 3 ngày</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.presetChip, { backgroundColor: theme.surfaceSubtle }]}
-            onPress={() => handleApplyPreset('nextweek')}
-            accessibilityRole="button"
-            accessibilityLabel="Đặt hạn tuần sau"
-          >
-            <Text style={[styles.presetChipText, { color: theme.textPrimary }]}>Tuần sau</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Status Option */}
-        <Text style={[styles.sectionLabel, { color: theme.textSecondary, marginTop: Spacing.md }]}>
-          Trạng thái ban đầu
-        </Text>
-        <View style={[styles.statusToggleRow, { backgroundColor: theme.surfaceSubtle }]}>
-          <TouchableOpacity
-            style={[
-              styles.statusToggleBtn,
-              status === 'pending' && [styles.statusToggleBtnActive, { backgroundColor: theme.surface }],
-            ]}
-            onPress={() => setStatus('pending')}
-            accessibilityRole="button"
-            accessibilityLabel="Trạng thái Đang làm"
-          >
-            <Text style={[styles.statusToggleText, { color: status === 'pending' ? theme.warning : theme.textSecondary }]}>
-              Chưa hoàn thành
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.statusToggleBtn,
-              status === 'completed' && [styles.statusToggleBtnActive, { backgroundColor: theme.surface }],
-            ]}
-            onPress={() => setStatus('completed')}
-            accessibilityRole="button"
-            accessibilityLabel="Trạng thái Đã hoàn thành"
-          >
-            <Text style={[styles.statusToggleText, { color: status === 'completed' ? theme.success : theme.textSecondary }]}>
-              Đã hoàn thành
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Notes Input */}
-        <AppInput
-          label="Ghi chú thêm (tùy chọn)"
-          placeholder="Nhập ghi chú, yêu cầu đề bài hoặc tài liệu tham khảo..."
-          value={notes}
-          onChangeText={setNotes}
-          multiline
-          numberOfLines={4}
-          style={{ minHeight: 90, textAlignVertical: 'top' }}
-        />
-
-        {/* Photo Attachment (Handwritten Notes / Whiteboard) */}
-        <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
-          Ảnh ghi chú viết tay / Bảng trắng (tùy chọn)
-        </Text>
-
-        {photoUri ? (
-          <View style={styles.photoPreviewWrapper}>
-            <Image source={{ uri: photoUri }} style={styles.photoPreview} />
-            <TouchableOpacity
-              style={[styles.removePhotoBtn, { backgroundColor: theme.error }]}
-              onPress={() => setPhotoUri(null)}
-              accessibilityRole="button"
-              accessibilityLabel="Xóa ảnh đính kèm"
-            >
-              <Ionicons name="trash" size={16} color={theme.textInverse} />
-              <Text style={[styles.removePhotoText, { color: theme.textInverse }]}>Xóa ảnh</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.attachPhotoButton, { backgroundColor: theme.surface, borderColor: theme.border }]}
-            onPress={handlePickImage}
-            accessibilityRole="button"
-            accessibilityLabel="Chụp hoặc chọn ảnh ghi chú bảng trắng"
-          >
-            <Ionicons name="camera-outline" size={24} color={theme.primary} style={{ marginRight: Spacing.sm }} />
-            <Text style={[styles.attachPhotoText, { color: theme.primary }]}>
-              Chụp ảnh ghi chú hoặc chọn từ thư viện
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Submit Button */}
-        <AppButton
-          title={isEditing ? 'Cập nhật bài tập' : 'Tạo bài tập'}
-          onPress={handleSubmit}
-          isLoading={isSubmitting}
-          style={styles.submitBtn}
-        />
-      </ScrollView>
+      </StateView>
     </KeyboardAvoidingView>
   );
 }
@@ -391,6 +459,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
+    width: '100%',
+    maxWidth: 540,
+    alignSelf: 'center',
   },
   headerTitle: {
     ...Typography.title2,
@@ -404,6 +475,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: Spacing.xl,
     paddingBottom: 40,
+    width: '100%',
+    maxWidth: 540,
+    alignSelf: 'center',
   },
   sectionLabel: {
     ...Typography.footnote,

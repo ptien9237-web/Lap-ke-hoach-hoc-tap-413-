@@ -1,6 +1,6 @@
 # NHẬT KÝ SỬ DỤNG AI (AI_LOG.md)
 **Đồ án:** Ứng dụng lập kế hoạch học tập (Student Study Planner)  
-**Môn học:** Phát triển ứng dụng di động  
+**Môn học:** Lập trình Mobile  
 **Sinh viên thực hiện:** Nguyễn Văn Tiến (MSSV: 1923050413)  
 **Mã nguồn Git:** `HP-Tien <ptien9237@gmail.com>`  
 **Thời điểm thực hiện & hoàn thành:** 27/10/2026  

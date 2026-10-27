@@ -1,6 +1,6 @@
 # ỨNG DỤNG LẬP KẾ HOẠCH HỌC TẬP (STUDENT STUDY PLANNER)
 
-> **Đồ án cuối kỳ môn:** Phát triển Ứng dụng Di động  
+> **Đồ án cuối kỳ môn:** Lập trình Mobile  
 > **Sinh viên thực hiện:** Nguyễn Văn Tiến  
 > **Mã số sinh viên (MSSV):** 1923050413  
 > **Công nghệ:** React Native (Expo SDK 58, Expo Router, TypeScript Strict), Express.js Backend, SQLite (WAL mode).
@@ -249,7 +249,7 @@ npm test
 
 ## 7. THÔNG TIN BẢN QUYỀN & TÁC GIẢ
 
-- **Đồ án:** Phát triển Ứng dụng Di động
+- **Đồ án môn:** Lập trình Mobile
 - **Sinh viên:** Nguyễn Văn Tiến
 - **MSSV:** 1923050413
 - **Email:** ptien9237@gmail.com

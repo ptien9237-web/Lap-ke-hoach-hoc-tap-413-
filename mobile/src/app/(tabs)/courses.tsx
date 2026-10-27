@@ -19,6 +19,7 @@ import { AppInput } from '../../components/common/AppInput';
 import { AppButton } from '../../components/common/AppButton';
 import { OfflineBanner } from '../../components/common/OfflineBanner';
 import { Course } from '../../types/course';
+import { confirmAction } from '../../utils/confirmDialog';
 import {
   AVAILABLE_COURSE_COLOURS,
   resolveCourseColour,
@@ -94,24 +95,20 @@ export default function CoursesScreen() {
   };
 
   const handleDeleteCourse = (course: Course) => {
-    Alert.alert(
-      'Xóa học phần',
-      `Bạn có chắc chắn muốn xóa học phần "${course.code} - ${course.name}"? Các bài tập thuộc học phần này cũng sẽ bị xóa.`,
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteCourse(course.id);
-            } catch (err: any) {
-              Alert.alert('Lỗi', err.message || 'Không thể xóa học phần.');
-            }
-          },
-        },
-      ]
-    );
+    confirmAction({
+      title: 'Xóa học phần',
+      message: `Bạn có chắc chắn muốn xóa học phần "${course.code} - ${course.name}"? Các bài tập thuộc học phần này cũng sẽ bị xóa.`,
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteCourse(course.id);
+        } catch (err: any) {
+          Alert.alert('Lỗi', err.message || 'Không thể xóa học phần.');
+        }
+      },
+    });
   };
 
   return (
@@ -245,7 +242,7 @@ export default function CoursesScreen() {
 
               <AppInput
                 label="Tên học phần"
-                placeholder="Ví dụ: Lập trình ứng dụng di động..."
+                placeholder="Ví dụ: Lập trình Mobile..."
                 value={name}
                 onChangeText={(t) => {
                   setName(t);
@@ -381,8 +378,11 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   modalCard: {
+    width: '100%',
+    maxWidth: 480,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     padding: Spacing.xl,

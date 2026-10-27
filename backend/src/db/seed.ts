@@ -20,7 +20,7 @@ export function seedData(db = getDatabase()) {
 
   // 6 Courses for university student
   const courses = [
-    { id: crypto.randomUUID(), code: 'INT3102', name: 'Lập trình ứng dụng di động', colour: 'courseBlue' },
+    { id: crypto.randomUUID(), code: 'INT3102', name: 'Lập trình Mobile', colour: 'courseBlue' },
     { id: crypto.randomUUID(), code: 'INT3110', name: 'Kiến trúc phần mềm', colour: 'courseEmerald' },
     { id: crypto.randomUUID(), code: 'INT3201', name: 'Cơ sở dữ liệu nâng cao', colour: 'coursePurple' },
     { id: crypto.randomUUID(), code: 'INT3305', name: 'Trí tuệ nhân tạo', colour: 'courseAmber' },

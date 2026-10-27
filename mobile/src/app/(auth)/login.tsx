@@ -173,6 +173,9 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: Spacing.xxl,
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
   },
   iconCircle: {
     width: 80,
@@ -202,6 +205,9 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
     marginBottom: Spacing.xl,
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
   },
   cardTitle: {
     ...Typography.title2,
@@ -246,6 +252,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
   },
   footerText: {
     ...Typography.body,

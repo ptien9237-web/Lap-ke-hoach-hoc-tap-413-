@@ -88,6 +88,7 @@ export default function CalendarScreen() {
             onPress={() => setViewMode('day')}
             accessibilityRole="button"
             accessibilityLabel="Xem theo ngày đã chọn"
+            accessibilityState={{ selected: viewMode === 'day' }}
           >
             <Text
               style={[
@@ -107,6 +108,7 @@ export default function CalendarScreen() {
             onPress={() => setViewMode('week')}
             accessibilityRole="button"
             accessibilityLabel="Xem toàn bộ tuần"
+            accessibilityState={{ selected: viewMode === 'week' }}
           >
             <Text
               style={[

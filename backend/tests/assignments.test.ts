@@ -26,7 +26,7 @@ describe('Assignments and Courses API', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         code: 'INT3102',
-        name: 'Lập trình di động',
+        name: 'Lập trình Mobile',
         colour: 'courseBlue',
       });
     courseId = courseRes.body.data.course.id;
@@ -71,7 +71,7 @@ describe('Assignments and Courses API', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.assignment.id).toBe(assignmentId);
-    expect(res.body.data.assignment.courseName).toBe('Lập trình di động');
+    expect(res.body.data.assignment.courseName).toBe('Lập trình Mobile');
   });
 
   it('should toggle assignment status to completed', async () => {

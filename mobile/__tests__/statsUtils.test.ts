@@ -44,7 +44,7 @@ function computeProgressStats(courses: Course[], assignments: Assignment[]) {
 
 describe('Dynamic Progress Statistics Computation (Requirement 5.6 & 10)', () => {
   const sampleCourses: Course[] = [
-    { id: 'c1', code: 'INT3102', name: 'Lập trình di động', colour: 'courseBlue' },
+    { id: 'c1', code: 'INT3102', name: 'Lập trình Mobile', colour: 'courseBlue' },
     { id: 'c2', code: 'INT3110', name: 'Kiến trúc phần mềm', colour: 'courseEmerald' },
     { id: 'c3', code: 'EMPTY101', name: 'Học phần chưa có bài', colour: 'courseRose' },
   ];

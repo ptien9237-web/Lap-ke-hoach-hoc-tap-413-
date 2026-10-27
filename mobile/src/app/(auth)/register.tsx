@@ -79,100 +79,102 @@ export default function RegisterScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Quay lại đăng nhập"
-        >
-          <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
-        </TouchableOpacity>
-
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.textPrimary }]}>Tạo tài khoản</Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Bắt đầu quản lý kế hoạch học tập cá nhân của bạn
-          </Text>
-        </View>
-
-        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          {authError && (
-            <View style={[styles.errorBanner, { backgroundColor: theme.errorBg }]}>
-              <Ionicons name="alert-circle" size={18} color={theme.error} style={styles.errorIcon} />
-              <Text style={[styles.errorBannerText, { color: theme.error }]}>{authError}</Text>
-            </View>
-          )}
-
-          <AppInput
-            label="Họ và tên sinh viên"
-            placeholder="Nguyễn Văn A"
-            value={name}
-            onChangeText={(text) => {
-              setName(text);
-              if (validationErrors.name) setValidationErrors((prev) => ({ ...prev, name: '' }));
-            }}
-            leftIcon="person-outline"
-            error={validationErrors.name}
-          />
-
-          <AppInput
-            label="Email"
-            placeholder="student@study.edu.vn"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (validationErrors.email) setValidationErrors((prev) => ({ ...prev, email: '' }));
-            }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            leftIcon="mail-outline"
-            error={validationErrors.email}
-          />
-
-          <AppInput
-            label="Mật khẩu"
-            placeholder="Tối thiểu 6 ký tự"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (validationErrors.password) setValidationErrors((prev) => ({ ...prev, password: '' }));
-            }}
-            isPassword
-            leftIcon="lock-closed-outline"
-            error={validationErrors.password}
-          />
-
-          <AppInput
-            label="Xác nhận mật khẩu"
-            placeholder="Nhập lại mật khẩu"
-            value={confirmPassword}
-            onChangeText={(text) => {
-              setConfirmPassword(text);
-              if (validationErrors.confirmPassword) setValidationErrors((prev) => ({ ...prev, confirmPassword: '' }));
-            }}
-            isPassword
-            leftIcon="shield-checkmark-outline"
-            error={validationErrors.confirmPassword}
-          />
-
-          <AppButton
-            title="Đăng ký tài khoản"
-            onPress={handleRegister}
-            isLoading={isLoading}
-            style={styles.submitButton}
-          />
-        </View>
-
-        <View style={styles.footerRow}>
-          <Text style={[styles.footerText, { color: theme.textSecondary }]}>Đã có tài khoản?</Text>
+        <View style={styles.formWrapper}>
           <TouchableOpacity
-            onPress={() => router.push('/(auth)/login')}
-            accessibilityRole="link"
-            accessibilityLabel="Đăng nhập với tài khoản có sẵn"
-            style={styles.loginLink}
+            style={styles.backButton}
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Quay lại đăng nhập"
           >
-            <Text style={[styles.loginText, { color: theme.primary }]}>Đăng nhập</Text>
+            <Ionicons name="arrow-back" size={24} color={theme.textPrimary} />
           </TouchableOpacity>
+
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: theme.textPrimary }]}>Tạo tài khoản</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+              Bắt đầu quản lý kế hoạch học tập cá nhân của bạn
+            </Text>
+          </View>
+
+          <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            {authError && (
+              <View style={[styles.errorBanner, { backgroundColor: theme.errorBg }]}>
+                <Ionicons name="alert-circle" size={18} color={theme.error} style={styles.errorIcon} />
+                <Text style={[styles.errorBannerText, { color: theme.error }]}>{authError}</Text>
+              </View>
+            )}
+
+            <AppInput
+              label="Họ và tên sinh viên"
+              placeholder="Nguyễn Văn A"
+              value={name}
+              onChangeText={(text) => {
+                setName(text);
+                if (validationErrors.name) setValidationErrors((prev) => ({ ...prev, name: '' }));
+              }}
+              leftIcon="person-outline"
+              error={validationErrors.name}
+            />
+
+            <AppInput
+              label="Email"
+              placeholder="student@study.edu.vn"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (validationErrors.email) setValidationErrors((prev) => ({ ...prev, email: '' }));
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              leftIcon="mail-outline"
+              error={validationErrors.email}
+            />
+
+            <AppInput
+              label="Mật khẩu"
+              placeholder="Tối thiểu 6 ký tự"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (validationErrors.password) setValidationErrors((prev) => ({ ...prev, password: '' }));
+              }}
+              isPassword
+              leftIcon="lock-closed-outline"
+              error={validationErrors.password}
+            />
+
+            <AppInput
+              label="Xác nhận mật khẩu"
+              placeholder="Nhập lại mật khẩu"
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                if (validationErrors.confirmPassword) setValidationErrors((prev) => ({ ...prev, confirmPassword: '' }));
+              }}
+              isPassword
+              leftIcon="shield-checkmark-outline"
+              error={validationErrors.confirmPassword}
+            />
+
+            <AppButton
+              title="Đăng ký tài khoản"
+              onPress={handleRegister}
+              isLoading={isLoading}
+              style={styles.submitButton}
+            />
+          </View>
+
+          <View style={styles.footerRow}>
+            <Text style={[styles.footerText, { color: theme.textSecondary }]}>Đã có tài khoản?</Text>
+            <TouchableOpacity
+              onPress={() => router.push('/(auth)/login')}
+              accessibilityRole="link"
+              accessibilityLabel="Đăng nhập với tài khoản có sẵn"
+              style={styles.loginLink}
+            >
+              <Text style={[styles.loginText, { color: theme.primary }]}>Đăng nhập</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -182,6 +184,11 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  formWrapper: {
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
   },
   scrollContent: {
     flexGrow: 1,

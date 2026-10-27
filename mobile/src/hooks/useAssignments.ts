@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { offlineStorage } from '../services/offlineStorage';
@@ -17,14 +18,21 @@ export function useAssignments(filters?: AssignmentFilterOptions) {
   const isOffline = useOfflineStore((s) => s.isOffline);
   const refreshQueueCount = useOfflineStore((s) => s.refreshQueueCount);
 
+  // Extract server-side query filters to avoid refetching on client-side search keystrokes
+  const serverFilters = {
+    courseId: filters?.courseId && filters.courseId !== 'all' ? filters.courseId : undefined,
+    status: filters?.status && filters.status !== 'all' ? filters.status : undefined,
+    sort: filters?.sort,
+  };
+
   const query = useQuery({
-    queryKey: [...ASSIGNMENTS_QUERY_KEY, filters],
+    queryKey: [...ASSIGNMENTS_QUERY_KEY, serverFilters],
     queryFn: async () => {
       try {
         const params: Record<string, any> = {};
-        if (filters?.courseId && filters.courseId !== 'all') params.courseId = filters.courseId;
-        if (filters?.status && filters.status !== 'all') params.status = filters.status;
-        if (filters?.sort) params.sort = filters.sort;
+        if (serverFilters.courseId) params.courseId = serverFilters.courseId;
+        if (serverFilters.status) params.status = serverFilters.status;
+        if (serverFilters.sort) params.sort = serverFilters.sort;
 
         const res = await api.get<{ assignments: Assignment[] }>('/api/assignments', { params });
         // Update local persistent cache
@@ -37,15 +45,11 @@ export function useAssignments(filters?: AssignmentFilterOptions) {
           useOfflineStore.getState().setIsOffline(true);
           let filtered = cached;
 
-          if (filters?.courseId && filters.courseId !== 'all') {
-            filtered = filtered.filter((a) => a.courseId === filters.courseId);
+          if (serverFilters.courseId) {
+            filtered = filtered.filter((a) => a.courseId === serverFilters.courseId);
           }
-          if (filters?.status && filters.status !== 'all') {
-            filtered = filtered.filter((a) => a.status === filters.status);
-          }
-          if (filters?.search && filters.search.trim()) {
-            const q = filters.search.toLowerCase();
-            filtered = filtered.filter((a) => a.title.toLowerCase().includes(q) || (a.notes && a.notes.toLowerCase().includes(q)));
+          if (serverFilters.status) {
+            filtered = filtered.filter((a) => a.status === serverFilters.status);
           }
 
           return filtered;
@@ -56,16 +60,20 @@ export function useAssignments(filters?: AssignmentFilterOptions) {
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 
-  // Client-side search filtering if query returns full set
-  const filteredAssignments = (query.data || []).filter((assignment) => {
-    if (!filters?.search || !filters.search.trim()) return true;
-    const q = filters.search.toLowerCase();
-    return (
+  const searchQuery = filters?.search;
+  const assignmentsData = query.data;
+
+  // Client-side search filtering memoized so typing never hits the network
+  const filteredAssignments = useMemo(() => {
+    const list = assignmentsData || [];
+    if (!searchQuery || !searchQuery.trim()) return list;
+    const q = searchQuery.toLowerCase();
+    return list.filter((assignment) =>
       assignment.title.toLowerCase().includes(q) ||
       (assignment.notes && assignment.notes.toLowerCase().includes(q)) ||
       (assignment.courseCode && assignment.courseCode.toLowerCase().includes(q))
     );
-  });
+  }, [assignmentsData, searchQuery]);
 
   const createAssignmentMutation = useMutation({
     mutationFn: async (input: CreateAssignmentInput) => {
@@ -235,4 +243,42 @@ export function useAssignments(filters?: AssignmentFilterOptions) {
     deleteAssignment: deleteAssignmentMutation.mutateAsync,
     isCreating: createAssignmentMutation.isPending,
   };
+}
+
+/**
+ * Hook to fetch a single assignment by ID.
+ * - Supports instant rendering via initialData from cache if assignment is already loaded.
+ * - Calls GET /api/assignments/:id if accessing directly via deep link, web refresh, or empty cache.
+ * - Handles offline fallback safely.
+ */
+export function useAssignment(id?: string) {
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: [...ASSIGNMENTS_QUERY_KEY, 'detail', id],
+    queryFn: async () => {
+      if (!id) return null;
+
+      try {
+        const res = await api.get<{ assignment: Assignment }>(`/api/assignments/${id}`);
+        return res.assignment;
+      } catch (err: any) {
+        // Fallback to local cache if network fails
+        const cached = await offlineStorage.getCachedAssignments();
+        const found = cached.find((a) => a.id === id);
+        if (found) {
+          useOfflineStore.getState().setIsOffline(true);
+          return found;
+        }
+        throw err;
+      }
+    },
+    enabled: Boolean(id),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    initialData: () => {
+      if (!id) return undefined;
+      const cachedList = queryClient.getQueryData<Assignment[]>(ASSIGNMENTS_QUERY_KEY);
+      return cachedList?.find((a) => a.id === id);
+    },
+  });
 }

@@ -59,6 +59,8 @@ export default function StatsScreen() {
                 borderColor: theme.border,
               },
             ]}
+            accessibilityRole="summary"
+            accessibilityLabel={`Tổng quan hoàn thành: ${overview.completionRate}%, ${overview.completedAssignments} trên ${overview.totalAssignments} bài tập.`}
           >
             <View style={styles.heroTextContainer}>
               <Text style={[styles.heroHeading, { color: theme.textSecondary }]}>Tổng quan hoàn thành</Text>
@@ -77,21 +79,33 @@ export default function StatsScreen() {
 
           {/* Quick Stats Summary Grid */}
           <View style={styles.summaryGrid}>
-            <View style={[styles.summaryBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View
+              style={[styles.summaryBox, { backgroundColor: theme.surface, borderColor: theme.border }]}
+              accessibilityRole="summary"
+              accessibilityLabel={`${overview.completedAssignments} bài tập đã hoàn thành`}
+            >
               <Text style={[styles.summaryNumber, { color: theme.success }]}>
                 {overview.completedAssignments}
               </Text>
               <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Đã hoàn thành</Text>
             </View>
 
-            <View style={[styles.summaryBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View
+              style={[styles.summaryBox, { backgroundColor: theme.surface, borderColor: theme.border }]}
+              accessibilityRole="summary"
+              accessibilityLabel={`${overview.pendingAssignments} bài tập chưa hoàn thành`}
+            >
               <Text style={[styles.summaryNumber, { color: overview.pendingAssignments > 0 ? theme.warning : theme.textSecondary }]}>
                 {overview.pendingAssignments}
               </Text>
               <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Chưa xong</Text>
             </View>
 
-            <View style={[styles.summaryBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View
+              style={[styles.summaryBox, { backgroundColor: theme.surface, borderColor: theme.border }]}
+              accessibilityRole="summary"
+              accessibilityLabel={`${overview.dueSoonCount} bài tập có hạn nộp trong 48 giờ tới`}
+            >
               <Text style={[styles.summaryNumber, { color: theme.info }]}>
                 {overview.dueSoonCount}
               </Text>
