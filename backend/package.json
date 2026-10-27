@@ -9,6 +9,7 @@
     "dev": "node --watch --no-warnings -r ts-node/register src/index.ts",
     "test": "vitest run",
     "lint": "tsc --noEmit",
+    "tsc": "tsc --noEmit",
     "seed": "tsc && node dist/db/seed.js"
   },
   "dependencies": {
