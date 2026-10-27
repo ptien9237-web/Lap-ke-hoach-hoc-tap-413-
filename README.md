@@ -250,7 +250,7 @@ npm test
 ## 7. THÔNG TIN BẢN QUYỀN & TÁC GIẢ
 
 - **Đồ án môn:** Lập trình Mobile
-- **Sinh viên:** Nguyễn Văn Tiến
-- **MSSV:** 1923050413
+- **Sinh viên thực hiện:** Huỳnh Phúc Tiến
+- **Mã số sinh viên (MSSV):** 1923050413
 - **Email:** ptien9237@gmail.com
 - **Khóa luận/Kỳ thi:** Final Exam Project 2026.
